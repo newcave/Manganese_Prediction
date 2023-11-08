@@ -1,5 +1,6 @@
 #streamlit
 scikit-learn
+sklearn
 plotly
 xgboost
 altair==5.1.2
