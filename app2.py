@@ -100,7 +100,7 @@ with st.sidebar:
     st.write("---")
 
     # Checkbox for sample data
-    load_data = st.checkbox("샘플 데이터 사용 (주암댐)", value=False)
+    load_data = st.checkbox("Dam(JA) data", value=False)
     if not load_data:
         file = st.file_uploader("CSV 파일 업로드", type=["csv"])
     else:
