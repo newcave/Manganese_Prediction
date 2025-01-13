@@ -27,9 +27,9 @@ def AL_RandomForest(trainX, trainY, testX, testY, n_estimators=400, max_depth=No
 
 def AL_GradientBoosting(trainX, trainY, testX, testY,
                         n_estimators=200, learning_rate=0.04, max_depth=2, random_state=42):
-    # Temporarily rename columns as integers to avoid fitting errors
+    # (추가) 컬럼이 object일 경우 숫자형으로 한정
     trainX.columns = pd.RangeIndex(trainX.shape[1])
-    testX.columns = pd.RangeIndex(testX.shape[1])
+    testX.columns  = pd.RangeIndex(testX.shape[1])
 
     gbr_model = GradientBoostingRegressor(
         n_estimators=n_estimators,
@@ -43,9 +43,8 @@ def AL_GradientBoosting(trainX, trainY, testX, testY,
 
 def AL_XGBoosting(trainX, trainY, testX, testY,
                   n_estimators=300, learning_rate=0.05, max_depth=3, random_state=42):
-    # Temporarily rename columns as integers to avoid fitting errors
     trainX.columns = pd.RangeIndex(trainX.shape[1])
-    testX.columns = pd.RangeIndex(testX.shape[1])
+    testX.columns  = pd.RangeIndex(testX.shape[1])
 
     xgb_model = xgboost.XGBRegressor(
         n_estimators=n_estimators,
@@ -58,9 +57,8 @@ def AL_XGBoosting(trainX, trainY, testX, testY,
     return y_pred2
 
 def AL_SVR(trainX, trainY, testX, testY):
-    # 만약 SVR에서도 파라미터를 조정하고 싶다면, 동일하게 파라미터 추가 가능
     trainX.columns = pd.RangeIndex(trainX.shape[1])
-    testX.columns = pd.RangeIndex(testX.shape[1])
+    testX.columns  = pd.RangeIndex(testX.shape[1])
 
     sv_regressor = SVR(kernel='linear', C=3, epsilon=0.03)
     sv_regressor.fit(trainX, trainY)
@@ -140,7 +138,7 @@ if file:
         st.warning("CSV 파일을 로드하는 동안 오류가 발생했습니다. 다시 시도해주세요.")
         st.stop()
 
-    # -- (2) 데이터 미리보기: 기존의 expander 방식으로 복구
+    # -- (2) 데이터 미리보기
     with st.expander("🔍 데이터 미리보기", expanded=False):
         st.dataframe(data.head(5), use_container_width=True)
 
@@ -191,12 +189,47 @@ if file:
             st.markdown("**전처리된 데이터 미리보기**")
             st.dataframe(scaled_data.head(5), use_container_width=True)
 
+        # -- 최종 데이터에서 날짜 컬럼 제외
         final_data = scaled_data.drop(['set_date'], axis=1)
         X = final_data.drop([y_var], axis=1)
         y = final_data[y_var]
 
+        # -- Train/Test Split
         trainX, testX, trainY, testY = train_test_split(X, y, test_size=0.2, random_state=42)
 
+        ########################################################################
+        # (중요) NaN / Inf 제거 & 숫자형 칼럼만 사용
+        ########################################################################
+        # 1) 숫자형 컬럼만 사용
+        trainX = trainX.select_dtypes(include=[np.number])
+        testX  = testX.select_dtypes(include=[np.number])
+
+        # 2) Inf -> NaN 변환
+        trainX = trainX.replace([np.inf, -np.inf], np.nan)
+        testX  = testX.replace([np.inf, -np.inf], np.nan)
+
+        # 3) NaN이 있는 행 제거 (X, Y 동기화)
+        #    trainX가 NaN인 행 => trainY에서도 같은 index 제거
+        before_train_size = len(trainX)
+        train_mask = trainX.notnull().all(axis=1)  # 모든 칼럼이 notnull인 행만 True
+        trainX = trainX[train_mask]
+        trainY = trainY[train_mask]
+        after_train_size = len(trainX)
+
+        # test도 동일하게
+        before_test_size = len(testX)
+        test_mask = testX.notnull().all(axis=1)
+        testX = testX[test_mask]
+        testY = testY[test_mask]
+        after_test_size = len(testX)
+
+        # -- 로그로 확인해볼 수도 있음
+        st.write(f"Train Data: {before_train_size} -> {after_train_size} (rows after drop NaN/Inf)")
+        st.write(f"Test  Data: {before_test_size} -> {after_test_size} (rows after drop NaN/Inf)")
+
+        ########################################################################
+        # 이후 모델 학습
+        ########################################################################
         model_list = ["Random Forest", "Gradient Boosting", "XGBoost"]
         performance_list = ["RMSE", "R2", "MSE", "MAE"]
 
