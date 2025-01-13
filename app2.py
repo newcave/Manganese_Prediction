@@ -26,7 +26,7 @@ def AL_RandomForest(trainX, trainY, testX, testY, n_estimators=400, max_depth=No
     return y_pred2
 
 def AL_GradientBoosting(trainX, trainY, testX, testY,
-                        n_estimators=500, learning_rate=0.05, max_depth=3, random_state=42):
+                        n_estimators=200, learning_rate=0.04, max_depth=2, random_state=42):
     # Temporarily rename columns as integers to avoid fitting errors
     trainX.columns = pd.RangeIndex(trainX.shape[1])
     testX.columns = pd.RangeIndex(testX.shape[1])
@@ -322,8 +322,8 @@ if len(st.session_state["simulation_results"]) > 0:
             )
         )
         fig.update_layout(
-            xaxis_title='테스트 데이터 인덱스',
-            yaxis_title='망간 농도(Mn)',
+            xaxis_title='데이터 인덱스',
+            yaxis_title='예측 농도치',
             legend=dict(orientation='h', y=1.1),
             autosize=True,
             width=1200,
