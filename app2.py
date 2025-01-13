@@ -124,7 +124,7 @@ st.markdown(
 )
 
 # -- (1) 토글로 "mangan_intro.jpg" 이미지를 보여줄지 말지 결정
-show_main_image = st.checkbox("Show introduction image?", value=True)
+show_main_image = st.checkbox("Show "Introduction"", value=True)
 if show_main_image:
     st.image(im2, use_column_width=True)
 
