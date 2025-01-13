@@ -111,6 +111,11 @@ placeholder = st.empty()
 if file == "dataset_cleaned.csv":
     placeholder.image(im2, use_column_width=True)
 
+# -- session_state에 시뮬레이션 결과를 저장하기 위한 공간 준비
+if "simulation_results" not in st.session_state:
+    # simulation_results 리스트 내부에 (모델 이름, 실제값, 예측값) 튜플을 저장할 예정
+    st.session_state["simulation_results"] = []
+
 # -- If data file is provided or sample is chosen
 if file:
     try:
@@ -198,6 +203,7 @@ if file:
 
             # Run training only when the user clicks this button
             if st.button("모델 훈련 및 예측하기"):
+                # 모델에 따라 시뮬레이션 실행
                 if selected_model == "Gradient Boosting":
                     yhat = AL_GradientBoosting(trainX, trainY, testX, testY)
                 elif selected_model == "Random Forest":
@@ -208,53 +214,67 @@ if file:
                     st.warning("모델이 선택되지 않았습니다.")
                     st.stop()
 
+                # 예측이 완료되면 session_state에 결과 저장
+                # (모델 이름, 실제값, 예측값)을 튜플로 저장
+                st.session_state["simulation_results"].append((selected_model, testY.values, yhat))
+
                 st.success(f"✅ 예측 완료! 모델: {selected_model}")
 
-                # -- Model Performance
-                st.subheader("모델 성능 지표")
-                actual = testY.values
-                for pi in performance_list:
-                    score = Performance_index(actual, yhat, pi)
-                    st.write(f"**{pi}**: {score:.4f}")
-
-                # -- Plotly Chart
-                st.subheader("예측 결과 시각화")
-                fig = go.Figure()
-                fig.add_trace(
-                    go.Scatter(
-                        x=np.arange(len(actual)),
-                        y=actual,
-                        mode='lines+markers',
-                        name='Actual',
-                        line=dict(color='green')
-                    )
-                )
-                fig.add_trace(
-                    go.Scatter(
-                        x=np.arange(len(yhat)),
-                        y=yhat,
-                        mode='lines+markers',
-                        name='Predicted',
-                        line=dict(color='red')
-                    )
-                )
-
-                fig.update_layout(
-                    xaxis_title='테스트 데이터 인덱스',
-                    yaxis_title='망간 농도(Mn)',
-                    legend=dict(orientation='h', y=1.1),
-                    autosize=True,
-                    width=1200,
-                    height=600,
-                    margin=dict(l=10, r=10, t=10, b=10),
-                    plot_bgcolor='white',
-                    paper_bgcolor='white',
-                    xaxis=dict(showline=True, linewidth=2, linecolor='black'),
-                    yaxis=dict(showline=True, linewidth=2, linecolor='black')
-                )
-                st.plotly_chart(fig, use_container_width=True)
     else:
         st.warning("날짜 컬럼과 종속변수(망간) 컬럼을 올바르게 선택해주세요.")
+
+# -- 이제 session_state에 누적된 시뮬레이션 결과를 보여줍니다.
+# -- Footer 위에 추가로 보여줄 수 있습니다.
+if len(st.session_state["simulation_results"]) > 0:
+    st.write("---")
+    st.subheader("📈 시뮬레이션 결과(누적)")
+    
+    # 여러 번 돌린 시뮬레이션 결과를 순차적으로 표시
+    for idx, (model_name, actual_vals, pred_vals) in enumerate(st.session_state["simulation_results"], start=1):
+        st.markdown(f"### ▶ 시뮬레이션 #{idx} (모델: {model_name})")
+
+        # 성능 지표 계산
+        performance_list = ["RMSE", "R2", "MSE", "MAE"]
+        # 성능 지표 출력
+        cols = st.columns(4)
+        for i, pi in enumerate(performance_list):
+            score = Performance_index(actual_vals, pred_vals, pi)
+            cols[i].metric(label=pi, value=f"{score:.4f}")
+        
+        # 그래프 시각화
+        fig = go.Figure()
+        fig.add_trace(
+            go.Scatter(
+                x=np.arange(len(actual_vals)),
+                y=actual_vals,
+                mode='lines+markers',
+                name='Actual',
+                line=dict(color='green')
+            )
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=np.arange(len(pred_vals)),
+                y=pred_vals,
+                mode='lines+markers',
+                name='Predicted',
+                line=dict(color='red')
+            )
+        )
+        fig.update_layout(
+            xaxis_title='테스트 데이터 인덱스',
+            yaxis_title='망간 농도(Mn)',
+            legend=dict(orientation='h', y=1.1),
+            autosize=True,
+            width=1200,
+            height=400,
+            margin=dict(l=10, r=10, t=10, b=10),
+            plot_bgcolor='white',
+            paper_bgcolor='white',
+            xaxis=dict(showline=True, linewidth=2, linecolor='black'),
+            yaxis=dict(showline=True, linewidth=2, linecolor='black')
+        )
+        st.plotly_chart(fig, use_container_width=True)
 
 # -- Footer / Credits
 st.write("---")
