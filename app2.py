@@ -224,7 +224,7 @@ if file:
             # 모델별 하이퍼파라미터 입력 영역
             st.markdown("**하이퍼파라미터 설정**")
             if selected_model == "Random Forest":
-                n_estimators = st.number_input("n_estimators (트리 개수)", min_value=50, max_value=2000, value=400, step=50)
+                n_estimators = st.number_input("n_estimators (트리 개수)", min_value=50, max_value=2000, value=300, step=50)
                 max_depth = st.number_input("max_depth (트리 깊이)", min_value=1, max_value=100, value=5, step=1)
                 # 파라미터 딕셔너리
                 param_dict = {
@@ -232,9 +232,9 @@ if file:
                     "max_depth": max_depth
                 }
             elif selected_model == "Gradient Boosting":
-                n_estimators = st.number_input("n_estimators (트리 개수)", min_value=50, max_value=2000, value=500, step=50)
-                learning_rate = st.slider("learning_rate", min_value=0.001, max_value=1.0, value=0.05, step=0.01)
-                max_depth = st.number_input("max_depth (트리 깊이)", min_value=1, max_value=50, value=3, step=1)
+                n_estimators = st.number_input("n_estimators (트리 개수)", min_value=50, max_value=2000, value=300, step=50)
+                learning_rate = st.slider("learning_rate", min_value=0.001, max_value=1.0, value=0.04, step=0.01)
+                max_depth = st.number_input("max_depth (트리 깊이)", min_value=1, max_value=50, value=2, step=1)
                 param_dict = {
                     "n_estimators": n_estimators,
                     "learning_rate": learning_rate,
@@ -327,8 +327,8 @@ if len(st.session_state["simulation_results"]) > 0:
             )
         )
         fig.update_layout(
-            xaxis_title='데이터 인덱스',
-            yaxis_title='예측 농도치',
+            xaxis_title='Data Index(#)',
+            yaxis_title='Concentration(mg/L)',
             legend=dict(orientation='h', y=1.1),
             autosize=True,
             width=1200,
