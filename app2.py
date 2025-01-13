@@ -15,7 +15,7 @@ import plotly.graph_objs as go
 # 1. Utility Functions   #
 ##########################
 
-def AL_RandomForest(trainX, trainY, testX, testY, n_estimators=500, max_depth=None, random_state=42):
+def AL_RandomForest(trainX, trainY, testX, testY, n_estimators=400, max_depth=None, random_state=42):
     rf_clf = RandomForestRegressor(
         n_estimators=n_estimators,
         max_depth=max_depth,
@@ -219,8 +219,8 @@ if file:
             # 모델별 하이퍼파라미터 입력 영역
             st.markdown("**하이퍼파라미터 설정**")
             if selected_model == "Random Forest":
-                n_estimators = st.number_input("n_estimators (트리 개수)", min_value=50, max_value=2000, value=500, step=50)
-                max_depth = st.number_input("max_depth (트리 깊이)", min_value=1, max_value=100, value=10, step=1)
+                n_estimators = st.number_input("n_estimators (트리 개수)", min_value=50, max_value=2000, value=400, step=50)
+                max_depth = st.number_input("max_depth (트리 깊이)", min_value=1, max_value=100, value=5, step=1)
                 # 파라미터 딕셔너리
                 param_dict = {
                     "n_estimators": n_estimators,
