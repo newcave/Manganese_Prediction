@@ -162,7 +162,7 @@ if file:
             y_var = st.selectbox(
                 "종속변수(망간 농도) 컬럼을 선택하세요",
                 options=[col for col in columns_list if col != date_col],
-                index=1
+                index=8
             )
 
     st.write("---")
