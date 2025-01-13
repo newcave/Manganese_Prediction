@@ -42,7 +42,7 @@ def AL_GradientBoosting(trainX, trainY, testX, testY,
     return y_pred2
 
 def AL_XGBoosting(trainX, trainY, testX, testY,
-                  n_estimators=500, learning_rate=0.05, max_depth=3, random_state=42):
+                  n_estimators=300, learning_rate=0.05, max_depth=3, random_state=42):
     # Temporarily rename columns as integers to avoid fitting errors
     trainX.columns = pd.RangeIndex(trainX.shape[1])
     testX.columns = pd.RangeIndex(testX.shape[1])
