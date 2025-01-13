@@ -27,6 +27,7 @@ def AL_RandomForest(trainX, trainY, testX, testY, n_estimators=400, max_depth=No
 
 def AL_GradientBoosting(trainX, trainY, testX, testY,
                         n_estimators=200, learning_rate=0.04, max_depth=2, random_state=42):
+    # Temporarily rename columns as integers to avoid fitting errors
     trainX.columns = pd.RangeIndex(trainX.shape[1])
     testX.columns = pd.RangeIndex(testX.shape[1])
 
@@ -42,6 +43,7 @@ def AL_GradientBoosting(trainX, trainY, testX, testY,
 
 def AL_XGBoosting(trainX, trainY, testX, testY,
                   n_estimators=300, learning_rate=0.05, max_depth=3, random_state=42):
+    # Temporarily rename columns as integers to avoid fitting errors
     trainX.columns = pd.RangeIndex(trainX.shape[1])
     testX.columns = pd.RangeIndex(testX.shape[1])
 
@@ -56,6 +58,7 @@ def AL_XGBoosting(trainX, trainY, testX, testY,
     return y_pred2
 
 def AL_SVR(trainX, trainY, testX, testY):
+    # 만약 SVR에서도 파라미터를 조정하고 싶다면, 동일하게 파라미터 추가 가능
     trainX.columns = pd.RangeIndex(trainX.shape[1])
     testX.columns = pd.RangeIndex(testX.shape[1])
 
@@ -74,6 +77,7 @@ def Performance_index(obs, pre, mod_str):
     elif mod_str == 'MAE':
         pf_index = mean_absolute_error(obs, pre)
     return pf_index
+
 
 ##########################
 # 2. Streamlit App       #
@@ -114,20 +118,21 @@ st.markdown(
     저수지 수질을 예측하기 위해 머신러닝(RandomForest, GradientBoosting, XGBoost) 모델 적용 
     1. Upload your dataset or select the sample data  
     2. Specify the date column and the target variable (Manganese concentration)  
-    3. Choose an analysis model and view the results (hyperparameter tuning is also available)  
+    3. Choose an analysis model and view the results (hyperparameter tuning is also available)
     ---
     """
 )
 
-# -- Image Placeholder
-placeholder = st.empty()
-if file == "dataset_cleaned.csv":
-    placeholder.image(im2, use_column_width=True)
+# -- (1) 토글로 "mangan_intro.jpg" 이미지를 보여줄지 말지 결정
+show_main_image = st.checkbox("Show introduction image?", value=True)
+if show_main_image:
+    st.image(im2, use_column_width=True)
 
 # -- session_state에 시뮬레이션 결과를 저장하기 위한 공간 준비
 if "simulation_results" not in st.session_state:
     st.session_state["simulation_results"] = []
 
+# -- 파일이 준비됐을 경우 로직 실행
 if file:
     try:
         data = pd.read_csv(file)
@@ -135,14 +140,11 @@ if file:
         st.warning("CSV 파일을 로드하는 동안 오류가 발생했습니다. 다시 시도해주세요.")
         st.stop()
 
-    ############################################################################
-    # (A) "데이터 미리보기"를 토글로 보여주거나 숨길 수 있도록 구성
-    ############################################################################
-    show_data_preview = st.checkbox("Show data preview?", value=True)
-    if show_data_preview:
-        st.write("### 🔍 데이터 미리보기")
+    # -- (2) 데이터 미리보기: 기존의 expander 방식으로 복구
+    with st.expander("🔍 데이터 미리보기", expanded=False):
         st.dataframe(data.head(5), use_container_width=True)
-        st.write("---")
+
+    st.write("---")
 
     # -- Column Selection
     with st.expander("1) 날짜 컬럼 및 망간(종속변수) 설정", expanded=True):
@@ -168,7 +170,7 @@ if file:
     st.write("---")
 
     if 'date_col' in locals() and 'y_var' in locals() and date_col and y_var:
-        # 2) Preprocessing
+        # 2) 데이터 전처리
         with st.expander("2) 데이터 전처리(Scaling, 날짜 처리)", expanded=True):
             st.write("✅ 선택된 날짜 컬럼: ", date_col)
             st.write("✅ 선택된 종속변수(망간 농도): ", y_var)
@@ -195,7 +197,6 @@ if file:
 
         trainX, testX, trainY, testY = train_test_split(X, y, test_size=0.2, random_state=42)
 
-        # 3) Model Selection
         model_list = ["Random Forest", "Gradient Boosting", "XGBoost"]
         performance_list = ["RMSE", "R2", "MSE", "MAE"]
 
@@ -258,62 +259,57 @@ if file:
     else:
         st.warning("날짜 컬럼과 종속변수(망간) 컬럼을 올바르게 선택해주세요.")
 
-# -----------------------------------------------------------------------------
-# (B) 시뮬레이션 결과(그래프)도 토글로 보이거나 숨길 수 있도록 구성
-# -----------------------------------------------------------------------------
+# -- 시뮬레이션 결과 표시
 if len(st.session_state["simulation_results"]) > 0:
     st.write("---")
-    show_simulation = st.checkbox("Show simulation results?", value=True)
-    if show_simulation:
-        st.subheader("📈 시뮬레이션 결과(누적)")
+    st.subheader("📈 시뮬레이션 결과(누적)")
 
-        total_sims = len(st.session_state["simulation_results"])
-        for idx, (model_name, actual_vals, pred_vals, used_params) in enumerate(reversed(st.session_state["simulation_results"]), start=1):
-            sim_number = total_sims - idx + 1  
-            st.markdown(f"### ▶ 시뮬레이션 #{sim_number} (모델: {model_name})")
+    total_sims = len(st.session_state["simulation_results"])
+    for idx, (model_name, actual_vals, pred_vals, used_params) in enumerate(reversed(st.session_state["simulation_results"]), start=1):
+        sim_number = total_sims - idx + 1  
+        st.markdown(f"### ▶ 시뮬레이션 #{sim_number} (모델: {model_name})")
+        if used_params:
+            st.write("**사용한 하이퍼파라미터:**", used_params)
 
-            if used_params:
-                st.write("**사용한 하이퍼파라미터:**", used_params)
-
-            performance_list = ["RMSE", "R2", "MSE", "MAE"]
-            cols = st.columns(4)
-            for i, pi in enumerate(performance_list):
-                score = Performance_index(actual_vals, pred_vals, pi)
-                cols[i].metric(label=pi, value=f"{score:.4f}")
-            
-            fig = go.Figure()
-            fig.add_trace(
-                go.Scatter(
-                    x=np.arange(len(actual_vals)),
-                    y=actual_vals,
-                    mode='lines+markers',
-                    name='Actual',
-                    line=dict(color='green')
-                )
+        performance_list = ["RMSE", "R2", "MSE", "MAE"]
+        cols = st.columns(4)
+        for i, pi in enumerate(performance_list):
+            score = Performance_index(actual_vals, pred_vals, pi)
+            cols[i].metric(label=pi, value=f"{score:.4f}")
+        
+        fig = go.Figure()
+        fig.add_trace(
+            go.Scatter(
+                x=np.arange(len(actual_vals)),
+                y=actual_vals,
+                mode='lines+markers',
+                name='Actual',
+                line=dict(color='green')
             )
-            fig.add_trace(
-                go.Scatter(
-                    x=np.arange(len(pred_vals)),
-                    y=pred_vals,
-                    mode='lines+markers',
-                    name='Predicted',
-                    line=dict(color='red')
-                )
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=np.arange(len(pred_vals)),
+                y=pred_vals,
+                mode='lines+markers',
+                name='Predicted',
+                line=dict(color='red')
             )
-            fig.update_layout(
-                xaxis_title='Data Index(#)',
-                yaxis_title='Concentration(mg/L)',
-                legend=dict(orientation='h', y=1.1),
-                autosize=True,
-                width=1200,
-                height=400,
-                margin=dict(l=10, r=10, t=10, b=10),
-                plot_bgcolor='white',
-                paper_bgcolor='white',
-                xaxis=dict(showline=True, linewidth=2, linecolor='black'),
-                yaxis=dict(showline=True, linewidth=2, linecolor='black')
-            )
-            st.plotly_chart(fig, use_container_width=True)
+        )
+        fig.update_layout(
+            xaxis_title='Data Index(#)',
+            yaxis_title='Concentration(mg/L)',
+            legend=dict(orientation='h', y=1.1),
+            autosize=True,
+            width=1200,
+            height=400,
+            margin=dict(l=10, r=10, t=10, b=10),
+            plot_bgcolor='white',
+            paper_bgcolor='white',
+            xaxis=dict(showline=True, linewidth=2, linecolor='black'),
+            yaxis=dict(showline=True, linewidth=2, linecolor='black')
+        )
+        st.plotly_chart(fig, use_container_width=True)
 
 # -- Footer / Credits
 st.write("---")
