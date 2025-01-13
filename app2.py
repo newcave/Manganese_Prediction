@@ -171,7 +171,7 @@ if file:
 
     if 'date_col' in locals() and 'y_var' in locals() and date_col and y_var:
         # 2) 데이터 전처리
-        with st.expander("2) 데이터 전처리(Scaling, 날짜 처리)", expanded=True):
+        with st.expander("2) 🔍 데이터 전처리(Scaling, 날짜 처리)", expanded=True):
             st.write("✅ 선택된 날짜 컬럼: ", date_col)
             st.write("✅ 선택된 종속변수(망간 농도): ", y_var)
 
