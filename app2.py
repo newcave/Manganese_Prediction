@@ -110,14 +110,19 @@ with st.sidebar:
     st.write("---")
 
 # -- Main Title / Intro Section
-st.title("📊 망간 수질 예측 모델")
+st.title("📊 Manganese Water Quality Prediction Model")
 st.markdown(
     """
-    이 페이지에서는 망간(Mn) 농도를 예측하기 위해 **RandomForest, GradientBoosting, XGBoost** 등의 
-    모델을 활용합니다. 아래의 단계를 차례대로 진행해주세요:
-    1. **데이터 업로드** 또는 **샘플 데이터 선택**  
-    2. **날짜 컬럼, 종속변수(망간 농도) 설정**  
-    3. **분석 모델 선택 및 결과 확인** (하이퍼파라미터도 조절 가능)  
+    On this page, we use models such as RandomForest, GradientBoosting, and XGBoost to predict the concentration of Manganese (Mn).
+    Please follow the steps below in order:
+    저수지 수질을 예측하기 위해 머신러닝(RandomForest, GradientBoosting, XGBoost) 모델 적용 
+    1. Upload your dataset or select the sample data
+      (데이터 업로드 또는 샘플 데이터 선택)
+    2. Specify the date column and the target variable (Manganese concentration)
+      (날짜 컬럼, 종속변수(예측변수 농도) 설정)  
+    3. 분석 모델 선택 및 결과 확인(누적됨, 하이퍼파라미터도 조정 가능)  
+       Choose an analysis model and view the results 
+       (hyperparameter tuning is also available)
     ---
     """
 )
